@@ -1,0 +1,12 @@
+body{
+    background-color: hsl(0, 0%, 20%);
+}
+div{
+    background-color: hsl(0, 0%, 80%);
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    z-index: 1;
+    flex: auto;
+    padding: 45px;
+    border-radius: 10px;
+    margin: 5%;
+}

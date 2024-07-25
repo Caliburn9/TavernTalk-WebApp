@@ -1,0 +1,50 @@
+html, body {
+    margin: 0; /* Remove default margins */
+    overflow: hidden; /* Prevent scroll bars from appearing */
+    height: 100%; /* Ensure body takes full height */
+    display: flex;
+}
+
+#map, .sprite {
+    image-rendering: pixelated;
+}
+
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh; /* Full viewport height */
+    width: 200vb;
+    background: #333131; 
+}
+
+#sprite-container {
+    z-index: 1;
+}
+
+.sprite {
+    width: 16px;
+    height: 16px;
+    background-image: url('art/spritesheet.png');
+    background-repeat: no-repeat;
+    transform: scale(0.75);
+    z-index: 2;
+}
+
+#speech-bubble-container {
+    z-index: 4;
+}
+
+#chat-box {
+    z-index: 5;
+}
+
+#map {
+    width: 1000px;
+    height: 625px;
+    background: url('art/test-map.png') no-repeat;
+    position: relative;
+    transform: scale(5);
+    transform-origin: top left;
+    align-self: center;
+}

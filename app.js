@@ -2,6 +2,9 @@ const socket = io();
 
 const spriteContainer = document.getElementById('sprite-container');
 const sprites = {};
+const userPositions = {};
+const pressedKeys = {};
+let facingDirection = 0;
 
 function updateSpriteElement(id, row, col, x, y) {
     let sprite = sprites[id];
@@ -12,8 +15,9 @@ function updateSpriteElement(id, row, col, x, y) {
         spriteContainer.appendChild(sprite);  
     }
 
-    const spriteX = -16 * col;
-    const spriteY = -16 * row;
+    const spriteDimension = 16;
+    const spriteX = -col * spriteDimension;
+    const spriteY = -row * spriteDimension;
     sprite.style.backgroundPosition = `${spriteX}px ${spriteY}px`;
 
     sprite.style.position = 'absolute';
@@ -24,43 +28,75 @@ function updateSpriteElement(id, row, col, x, y) {
 // Handle sprite assignment
 socket.on('assignSprite', ({ id, spriteRow, xStartPos, yStartPos }) => {
     updateSpriteElement(id, spriteRow, 0, xStartPos, yStartPos);
+    userPositions[id] = { x: xStartPos, y: yStartPos, spriteRow };
 });
 
 // Handle other users' movement
-// TODO: ONLY MOVES BY ONE POSITION. NEED TO GET CURRENT POSITION AND ADD TO IT
-socket.on('userMoved', ({ id, position, spriteRow }) => {
+socket.on('avatarMoved', ({ id, position, spriteRow, spriteCol }) => {
     const { x, y } = position;
-    updateSpriteElement(id, spriteRow, 0, x, y);
+    updateSpriteElement(id, spriteRow, spriteCol, x, y);
+    userPositions[id] = { x, y, spriteRow };
+});
+
+socket.on('avatarDisconnected', ({ id }) => {
+    const sprite = sprites[id];
+    if (sprite) {
+        spriteContainer.removeChild(sprite);
+        delete sprites[id];
+        delete userPositions[id];
+    }
 });
 
 // Move user sprite with arrow keys
-document.addEventListener('keydown', (e) => {
+function moveAvatar() {
     const moveSpeed = 5;
-    let x = 0;
-    let y = 0;
+    let dx = 0;
+    let dy = 0;
 
-    switch(e.key) {
-        case 'ArrowUp':
-            y -= moveSpeed;
-            break;
-        case 'ArrowDown':
-            y += moveSpeed;
-            break;  
-        case 'ArrowLeft':
-            x -= moveSpeed;
-            break;
-        case 'ArrowRight':
-            x += moveSpeed;
-            break;
+    if (pressedKeys['ArrowLeft']) {
+        dx = -moveSpeed;
+        facingDirection = 2;   
+    }
+    if (pressedKeys['ArrowRight']) {
+        dx = moveSpeed;
+        facingDirection = 0;   
+    }
+    if (pressedKeys['ArrowUp']) {
+        dy = -moveSpeed;
+    }
+    if (pressedKeys['ArrowDown']) {
+        dy = moveSpeed;
     }
 
-    if (x !== 0 || y !== 0) {
-        // Update position locally
-        const myId = socket.id;
-        // TODO: NEED TO CONSIDER SPRITEROW HERE
-        updateSpriteElement(myId, 0, 0, x, y);
+    let spriteCol = facingDirection;
 
-        // Notify server of the new position
-        socket.emit('movePlayer', { x, y });
+    if (dx === 0 && dy !== 0) {
+        spriteCol = facingDirection;
     }
-})
+
+    if (dx !== 0 || dy !== 0) {
+        const id = socket.id;
+        const currentPosition = userPositions[id];
+        if (currentPosition) {
+            const { x, y } = currentPosition;
+            const newX = x + dx;
+            const newY = y + dy;
+            userPositions[id] = { x: newX, y: newY, spriteRow: currentPosition.spriteRow };
+            updateSpriteElement(id, currentPosition.spriteRow, spriteCol, newX, newY);
+            // Notify server of the new position
+            socket.emit('moveAvatar', { dx, dy, spriteCol });
+        }
+    }
+}
+
+setInterval(moveAvatar, 225);
+
+document.addEventListener('keydown', (e) => {
+    pressedKeys[e.key] = true;
+});
+
+document.addEventListener('keyup', (e) => {
+    delete pressedKeys[e.key];
+});
+
+moveAvatar();

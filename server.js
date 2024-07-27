@@ -49,19 +49,30 @@ io.on('connection', (socket) => {
     const xStartPos = 96;
     const yStartPos = 64;
 
-    users[socket.id] = { x: 0, y: 0, spriteRow };
+    users[socket.id] = { x: xStartPos, y: yStartPos, spriteRow };
 
     socket.emit('assignSprite', { id: socket.id, spriteRow, xStartPos, yStartPos });
+    for (id in users) {
+        if (id !== socket.id) {
+            socket.emit("avatarMoved", { id, position: users[id], spriteRow: users[id].spriteRow });
+        }
+    }
 
-    socket.on('moveUser', (position) => {
+    socket.broadcast.emit('avatarMoved', { id: socket.id, position: { x: xStartPos, y: yStartPos }, spriteRow });
+
+    socket.on('moveAvatar', ({ dx, dy, spriteCol }) => {
         if (users[socket.id]) {
-            users[socket.id] = { ...users[socket.id], ...position, spriteRow };
-            io.emit("userMoved", { id: socket.id, position, spriteRow });
+            users[socket.id].x += dx;
+            users[socket.id].y += dy;
+            const position = { x: users[socket.id].x, y: users[socket.id].y };
+            io.emit("avatarMoved", { id: socket.id, position, spriteRow: users[socket.id].spriteRow, spriteCol });
         }
     });
 
     socket.on('disconnect', () => {
         console.log('A user disconnected: ', socket.id);
+        io.emit('avatarDisconnected', { id: socket.id });
+        delete users[socket.id];
     });
 });
 

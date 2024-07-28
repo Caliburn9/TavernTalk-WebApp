@@ -1,10 +1,15 @@
 const socket = io();
 
 const spriteContainer = document.getElementById('sprite-container');
+const chatBox = document.getElementById('chat-box');
+const sendButton = document.getElementById('send');
+
 const sprites = {};
 const userPositions = {};
 const pressedKeys = {};
+
 let facingDirection = 0;
+let speechBubble = null;
 
 function updateSpriteElement(id, row, col, x, y) {
     let sprite = sprites[id];
@@ -25,30 +30,32 @@ function updateSpriteElement(id, row, col, x, y) {
     sprite.style.top = `${y}px`;
 }
 
-// Handle sprite assignment
-socket.on('assignSprite', ({ id, spriteRow, xStartPos, yStartPos }) => {
-    updateSpriteElement(id, spriteRow, 0, xStartPos, yStartPos);
-    userPositions[id] = { x: xStartPos, y: yStartPos, spriteRow };
-});
+function createSpeechBubble(userid, text) {
+    const avatar = sprites[userid];
+    if (!avatar) return; 
 
-// Handle other users' movement
-socket.on('avatarMoved', ({ id, position, spriteRow, spriteCol }) => {
-    const { x, y } = position;
-    updateSpriteElement(id, spriteRow, spriteCol, x, y);
-    userPositions[id] = { x, y, spriteRow };
-});
-
-socket.on('avatarDisconnected', ({ id }) => {
-    const sprite = sprites[id];
-    if (sprite) {
-        spriteContainer.removeChild(sprite);
-        delete sprites[id];
-        delete userPositions[id];
+    if (speechBubble && speechBubble.parentElement === avatar) {
+        avatar.removeChild(speechBubble);
+        speechBubble = null;
     }
-});
+
+    speechBubble = document.createElement('div');
+    speechBubble.className = 'speech-bubble';
+    avatar.appendChild(speechBubble);
+
+    speechBubble.textContent = text;
+
+    requestAnimationFrame(() => {
+        speechBubble.classList.add('show');
+    });
+}
 
 // Move user sprite with arrow keys
 function moveAvatar() {
+    const mapWidth = 206;
+    const mapHeight = 129;
+    const avatarDimension = 16;
+    
     const moveSpeed = 5;
     let dx = 0;
     let dy = 0;
@@ -81,22 +88,67 @@ function moveAvatar() {
             const { x, y } = currentPosition;
             const newX = x + dx;
             const newY = y + dy;
-            userPositions[id] = { x: newX, y: newY, spriteRow: currentPosition.spriteRow };
-            updateSpriteElement(id, currentPosition.spriteRow, spriteCol, newX, newY);
-            // Notify server of the new position
-            socket.emit('moveAvatar', { dx, dy, spriteCol });
+
+            if (newX >= -8 && newX <= mapWidth - avatarDimension &&
+                newY >= 0 && newY <= mapHeight - avatarDimension
+            ) {
+                userPositions[id] = { x: newX, y: newY, spriteRow: currentPosition.spriteRow };
+                updateSpriteElement(id, currentPosition.spriteRow, spriteCol, newX, newY);
+                // Notify server of the new position
+                socket.emit('moveAvatar', { dx, dy, spriteCol });
+            }
         }
     }
 }
 
 setInterval(moveAvatar, 225);
 
+function sendMessage() {
+    const message = chatBox.value;
+    if (message.trim() !== '') {
+        socket.emit('sendMessage', { text: message, userid: socket.id });
+        chatBox.value = '';
+    }
+}
+
+// Handle sprite assignment
+socket.on('assignSprite', ({ id, spriteRow, xStartPos, yStartPos }) => {
+    updateSpriteElement(id, spriteRow, 0, xStartPos, yStartPos);
+    userPositions[id] = { x: xStartPos, y: yStartPos, spriteRow };
+});
+
+// Handle other users' movement
+socket.on('avatarMoved', ({ id, position, spriteRow, spriteCol }) => {
+    const { x, y } = position;
+    updateSpriteElement(id, spriteRow, spriteCol, x, y);
+    userPositions[id] = { x, y, spriteRow };
+});
+
+socket.on('avatarDisconnected', ({ id }) => {
+    const sprite = sprites[id];
+    if (sprite) {
+        spriteContainer.removeChild(sprite);
+        delete sprites[id];
+        delete userPositions[id];
+    }
+});
+
+socket.on('displaySpeechBubble', ({ userid, text }) => {
+    createSpeechBubble(userid, text);
+});
+
 document.addEventListener('keydown', (e) => {
     pressedKeys[e.key] = true;
+
+    if (e.key === 'Enter') {
+        sendMessage();
+    }
 });
 
 document.addEventListener('keyup', (e) => {
     delete pressedKeys[e.key];
 });
+
+sendButton.addEventListener('click', sendMessage);
 
 moveAvatar();

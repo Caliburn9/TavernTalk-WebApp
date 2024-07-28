@@ -32,6 +32,8 @@ const server = http.createServer(function(req, res) {
         serveFile(res, path.join(__dirname, "node_modules/socket.io/client-dist/socket.io.js"), "text/javascript");
     } else if (req.url.startsWith("/art/")) {
         serveFile(res, path.join(__dirname, req.url), "image/png");
+    } else if (req.url.startsWith("/fonts/")) {
+        serveFile(res, path.join(__dirname, req.url), "font/ttf");
     } else {
         res.writeHead(404);
         res.write("Error: Page not found");
@@ -73,6 +75,11 @@ io.on('connection', (socket) => {
         console.log('A user disconnected: ', socket.id);
         io.emit('avatarDisconnected', { id: socket.id });
         delete users[socket.id];
+    });
+
+    socket.on('sendMessage', ({ text, userid }) => {
+        socket.broadcast.emit('displaySpeechBubble', ({ userid, text }));
+        io.emit('displaySpeechBubble', { userid, text });
     });
 });
 

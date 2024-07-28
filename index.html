@@ -8,13 +8,12 @@
 </head>
 <body>
     <div id="map">
-        <div id="speech-bubble-container"></div>
         <div id="sprite-container"></div>
     </div>
-    <form>
-        <input type="textbox" id="chat-box" autocomplete="off">
-        <button type="submit" id="button"></button>
-    </form>
+    <div id="chat-area">
+        <input type="textbox" id="chat-box" autocomplete="off" placeholder="Write your message... Arrow Keys to Move..." spellcheck="false">
+        <button type="submit" id="send"></button>
+    </div>
     <script src="/socket.io/socket.io.js"></script>
     <script src="app.js"></script>
     <script src="server.js"></script>

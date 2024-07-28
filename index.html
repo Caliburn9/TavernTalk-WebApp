@@ -5,14 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TavernTalk</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="art/send-icon.png">
 </head>
-<body>
+<body onload="displayWelcome()">
     <div id="map">
         <div id="sprite-container"></div>
     </div>
     <div id="chat-area">
-        <input type="textbox" id="chat-box" autocomplete="off" placeholder="Write your message... Arrow Keys to Move..." spellcheck="false">
+        <input type="textbox" id="chat-box" autocomplete="off" placeholder="Write your message..." spellcheck="false">
         <button type="submit" id="send"></button>
+    </div>
+    <div id="details">
+        <p>
+            By Nabeel Aziz - 35102635
+        </p>
+        <p>
+            This work is licensed under a <a href="https://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 International License</a>.
+        </p>
+        <img src="https://licensebuttons.net/l/by-nc/4.0/88x31.png" alt="CC BY-NC">
     </div>
     <script src="/socket.io/socket.io.js"></script>
     <script src="app.js"></script>

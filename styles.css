@@ -55,7 +55,7 @@ body {
     height: 40px;
 }
 
-input, .speech-bubble {
+input, .speech-bubble, #details {
     font-family: projectFont;
     color: rgba(0, 0, 0, 0.75);
 }
@@ -132,4 +132,21 @@ button:active {
 
 .speech-bubble.show {
     opacity: 1;
+}
+
+#details {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    background: #7b5f45;
+    width: 150px;
+    padding: 3px;
+    border-radius: 5px;
+    font-size: 12px;
+    text-align: center;
+    z-index: 5;
+}
+
+#details a {
+    color: rgb(35, 35, 66);
 }

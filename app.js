@@ -111,6 +111,10 @@ function sendMessage() {
     }
 }
 
+function displayWelcome() {
+    alert("Welcome to TavernTalk!\n\nUse the Arrow Keys to Move and Chat using the box below!\n\nHappy Chatting!");
+}
+
 // Handle sprite assignment
 socket.on('assignSprite', ({ id, spriteRow, xStartPos, yStartPos }) => {
     updateSpriteElement(id, spriteRow, 0, xStartPos, yStartPos);
